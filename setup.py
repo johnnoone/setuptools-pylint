@@ -13,7 +13,7 @@ install_requires = [
 ]
 
 
-setup(name='setuptools_lint',
+setup(name='setuptools-lint',
     version=version,
     description="Setuptools command for pylint",
     long_description=README + '\n\n' + NEWS,
@@ -31,10 +31,11 @@ setup(name='setuptools_lint',
     keywords='pylint setuptools command',
     author='Xavier Barbosa',
     author_email='',
-    url='',
+    url='https://github.com/johnnoone/setuptools-pylint',
     license='BSD',
     packages=find_packages('src'),
-    package_dir = {'': 'src'},include_package_data=True,
+    package_dir = {'': 'src'},
+    include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
     entry_points={

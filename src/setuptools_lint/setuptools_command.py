@@ -9,35 +9,34 @@ def user_options():
     parsed = []
 
     for longopt, params in _opts:
-        shortopt = params.get('short', None)
         desc = params.get('help', None)
 
-        parsed.append((longopt+'=', shortopt, desc))
+        parsed.append(('lint-' + longopt + '=', None, desc))
     return parsed
 
 class PylintCommand(setuptools.Command):
     description = "run pylint on all your modules"
     user_options = user_options() + [
-        ('exclude-packages=', None, 'exclude packages?'),
-        ('file=', None, "write into this file"),
+        ('lint-exclude-packages=', None, 'exclude these packages'),
+        ('lint-output=', None, "output report into this file"),
     ]
 
     def initialize_options(self):
-        self.exclude_packages = 'tests test'
-        self.file = None
+        self.lint_exclude_packages = 'tests test'
+        self.lint_output = None
         for longopt, params in _opts:
-            setattr(self, longopt.replace('-', '_'), None)
+            setattr(self, 'lint_' + longopt.replace('-', '_'), None)
 
     def finalize_options(self):
-        self.exclude_packages = [module.strip() \
-            for module in re.split('[\s,]+', self.exclude_packages)]
-        if self.file:
-            self.file = open(self.file, 'w')
+        self.lint_exclude_packages = [module.strip() \
+            for module in re.split('[\s,]+', self.lint_exclude_packages)]
+        if self.lint_output:
+            self.lint_output = open(self.lint_output, 'w')
 
     def run(self):
         options = []
         for longopt, params in _opts:
-            value = getattr(self, longopt.replace('-', '_'))
+            value = getattr(self, 'lint_' + longopt.replace('-', '_'))
             if value is not None:
                 if ' ' in value:
                     value = '"' + value + '"'
@@ -46,12 +45,14 @@ class PylintCommand(setuptools.Command):
         files = []
         base = self.get_finalized_command('build_py')
         for (package, module, filename) in base.find_all_modules():
-            if package in self.exclude_packages:
+            if package in self.lint_exclude_packages:
                 continue
             files.append(filename)
 
-        if self.file:
-            stdout, sys.stdout = sys.stdout, self.file
+        if self.lint_output:
+            stdout, sys.stdout = sys.stdout, self.lint_output
+            stderr, sys.stdout = sys.stderr, self.lint_output
         lint.Run(options + files)
-        if self.file:
+        if self.lint_output:
             sys.stdout = stdout
+            sys.stderr = stderr
