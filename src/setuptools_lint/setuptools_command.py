@@ -25,7 +25,7 @@ class PylintCommand(setuptools.Command):
         self.lint_exclude_packages = 'tests test'
         self.lint_output = None
         for longopt, params in _opts:
-            setattr(self, 'lint_' + longopt.replace('-', '_'), None)
+            setattr(self, 'lint_' + longopt.replace('-', '_').rstrip('='), None)
 
     def finalize_options(self):
         self.lint_exclude_packages = [module.strip() \
