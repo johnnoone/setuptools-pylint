@@ -1,6 +1,13 @@
 News
 ====
 
+0.1.1
+---
+
+*Release date: 5-Jun-2012*
+
+* Better support for packages
+
 0.1
 ---
 
