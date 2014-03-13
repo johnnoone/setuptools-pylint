@@ -1,6 +1,8 @@
+import os
 import re
 import sys
 import setuptools
+from distutils.errors import DistutilsSetupError
 from pylint import lint
 
 _opts = lint.Run.LinterClass.make_options()
@@ -14,6 +16,12 @@ def user_options():
         parsed.append(('lint-' + longopt + '=', None, desc))
     return parsed
 
+
+def validate_rcfile(dist, attr, value):
+    if not os.path.exists(value):
+        raise DistutilsSetupError("Cannot find PyLint configuration file %s" % value)
+
+
 class PylintCommand(setuptools.Command):
     description = "run pylint on all your modules"
     user_options = user_options() + [
@@ -23,12 +31,14 @@ class PylintCommand(setuptools.Command):
          'can be paths to files or packages'),
         ('lint-exclude-packages=', None, 'exclude these packages'),
         ('lint-output=', None, "output report into this file"),
+        ('lint-rcfile=', None, "pylint configuration file"),
     ]
 
     def initialize_options(self):
         self.lint_packages = ''
         self.lint_exclude_packages = 'tests test'
         self.lint_output = None
+        self.lint_rcfile = self.distribution.lint_rcfile
         for longopt, params in _opts:
             setattr(self, 'lint_' + longopt.replace('-', '_').rstrip('='), None)
 
@@ -44,7 +54,7 @@ class PylintCommand(setuptools.Command):
 
     def run(self):
         options = []
-        for longopt, params in _opts:
+        for longopt, params in _opts + (("rcfile", None),):
             value = getattr(self, 'lint_' + longopt.replace('-', '_'))
             if value is not None:
                 if ' ' in value:

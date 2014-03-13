@@ -41,6 +41,9 @@ setup(name='setuptools-lint',
     entry_points={
         "distutils.commands": [
             "lint = setuptools_lint.setuptools_command:PylintCommand",
-        ]
+        ],
+        "distutils.setup_keywords": [
+            "lint_rcfile = setuptools_lint.setuptools_command:validate_rcfile",
+        ],
     }
 )
