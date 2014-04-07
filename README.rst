@@ -14,7 +14,7 @@ Usage
   python setup.py lint
 
 
-For a full list of options, do 
+For a full list of options, do
 
 ::
 

@@ -1,12 +1,13 @@
 News
 ====
 
-0.1.1
+0.2
 ---
 
-*Release date: 5-Jun-2012*
+*Release date: 7-Apr-2014*
 
 * Better support for packages
+* Allow specification of PyLint config file either on commandline or as setup keyword arg
 
 0.1
 ---
