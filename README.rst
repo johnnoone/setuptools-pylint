@@ -18,4 +18,4 @@ For a full list of options, do
 
 ::
 
-  python setup.py lint
+  python setup.py lint --help
