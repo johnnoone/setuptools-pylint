@@ -4,6 +4,7 @@ import sys
 import setuptools
 from distutils.errors import DistutilsSetupError
 from pylint import lint
+from pkg_resources import *
 
 _opts = lint.Run.LinterClass.make_options()
 
@@ -52,6 +53,48 @@ class PylintCommand(setuptools.Command):
         if self.lint_output:
             self.lint_output = open(self.lint_output, 'w')
 
+    def with_project_on_sys_path(self, func, *args):
+        if sys.version_info >= (3,) and getattr(self.distribution, 'use_2to3', False):
+            # If we run 2to3 we can not do this inplace:
+
+            # Ensure metadata is up-to-date
+            self.reinitialize_command('build_py', inplace=0)
+            self.run_command('build_py')
+            bpy_cmd = self.get_finalized_command("build_py")
+            build_path = normalize_path(bpy_cmd.build_lib)
+
+            # Build extensions
+            self.reinitialize_command('egg_info', egg_base=build_path)
+            self.run_command('egg_info')
+
+            self.reinitialize_command('build_ext', inplace=0)
+            self.run_command('build_ext')
+        else:
+            # Without 2to3 inplace works fine:
+            self.run_command('egg_info')
+
+            # Build extensions in-place
+            self.reinitialize_command('build_ext', inplace=1)
+            self.run_command('build_ext')
+
+        ei_cmd = self.get_finalized_command("egg_info")
+
+        old_path = sys.path[:]
+        old_modules = sys.modules.copy()
+
+        try:
+            sys.path.insert(0, normalize_path(ei_cmd.egg_base))
+            working_set.__init__()
+            add_activation_listener(lambda dist: dist.activate())
+            require('%s==%s' % (ei_cmd.egg_name, ei_cmd.egg_version))
+            func(*args)
+        finally:
+            sys.path[:] = old_path
+            sys.modules.clear()
+            sys.modules.update(old_modules)
+            working_set.__init__()
+
+
     def run(self):
         options = []
         for longopt, params in _opts + (("rcfile", None),):
@@ -60,6 +103,12 @@ class PylintCommand(setuptools.Command):
                 if ' ' in value:
                     value = '"' + value + '"'
                 options.append('--{0}={1}'.format(longopt, value))
+
+        if self.distribution.install_requires:
+            self.distribution.fetch_build_eggs(self.distribution.install_requires)
+
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(self.distribution.tests_require)
 
         if self.lint_packages:
             # The user explicitly specified the paths/packages to send to lint
@@ -76,7 +125,9 @@ class PylintCommand(setuptools.Command):
         if self.lint_output:
             stdout, sys.stdout = sys.stdout, self.lint_output
             stderr, sys.stdout = sys.stderr, self.lint_output
-        lint.Run(options + files)
+
+        self.with_project_on_sys_path(lint.Run, options + files)
+
         if self.lint_output:
             sys.stdout = stdout
             sys.stderr = stderr
