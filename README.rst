@@ -7,7 +7,7 @@ This package expose `pylint`_ as a lint command into setup.py.
 Installation
 ------------
 
-This package is publisher on pypi. You can use pip to install it.
+This package is published on pypi. You can use pip to install it.
 
 ::
 
