@@ -53,7 +53,7 @@ class PylintCommand(setuptools.Command):
         if self.lint_output:
             self.lint_output = open(self.lint_output, 'w')
 
-    def with_project_on_sys_path(self, func, *args):
+    def with_project_on_sys_path(self, func, func_args, func_kwargs):
         if sys.version_info >= (3,) and getattr(self.distribution, 'use_2to3', False):
             # If we run 2to3 we can not do this inplace:
 
@@ -87,7 +87,7 @@ class PylintCommand(setuptools.Command):
             working_set.__init__()
             add_activation_listener(lambda dist: dist.activate())
             require('%s==%s' % (ei_cmd.egg_name, ei_cmd.egg_version))
-            func(*args)
+            func(*func_args, **func_kwargs)
         finally:
             sys.path[:] = old_path
             sys.modules.clear()
@@ -126,7 +126,7 @@ class PylintCommand(setuptools.Command):
             stdout, sys.stdout = sys.stdout, self.lint_output
             stderr, sys.stdout = sys.stderr, self.lint_output
 
-        self.with_project_on_sys_path(lint.Run, options + files)
+        self.with_project_on_sys_path(lint.Run, [options + files], {'exit': False})
 
         if self.lint_output:
             sys.stdout = stdout
