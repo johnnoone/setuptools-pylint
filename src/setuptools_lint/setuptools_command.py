@@ -2,7 +2,7 @@ import os
 import re
 import sys
 import setuptools
-from distutils.errors import DistutilsSetupError
+from distutils.errors import DistutilsSetupError, DistutilsError
 from pylint import lint
 from pkg_resources import *
 
@@ -21,6 +21,10 @@ def user_options():
 def validate_rcfile(dist, attr, value):
     if not os.path.exists(value):
         raise DistutilsSetupError("Cannot find PyLint configuration file %s" % value)
+
+
+class DistutilsPylintError(DistutilsError):
+    pass
 
 
 class PylintCommand(setuptools.Command):
@@ -87,7 +91,7 @@ class PylintCommand(setuptools.Command):
             working_set.__init__()
             add_activation_listener(lambda dist: dist.activate())
             require('%s==%s' % (ei_cmd.egg_name, ei_cmd.egg_version))
-            func(*func_args, **func_kwargs)
+            return func(*func_args, **func_kwargs)
         finally:
             sys.path[:] = old_path
             sys.modules.clear()
@@ -125,9 +129,13 @@ class PylintCommand(setuptools.Command):
         if self.lint_output:
             stdout, sys.stdout = sys.stdout, self.lint_output
             stderr, sys.stdout = sys.stderr, self.lint_output
+        try:
 
-        self.with_project_on_sys_path(lint.Run, [options + files], {'exit': False})
+            lint_runner = self.with_project_on_sys_path(lint.Run, [options + files], {'exit': False})
+            if lint_runner.linter.msg_status != 0:
+                raise DistutilsPylintError("lint error %s." % lint_runner.linter.msg_status)
 
-        if self.lint_output:
-            sys.stdout = stdout
-            sys.stderr = stderr
+        finally:
+            if self.lint_output:
+                sys.stdout = stdout
+                sys.stderr = stderr
