@@ -56,7 +56,11 @@ class PylintCommand(setuptools.Command):
             for module in re.split('[\s,]+', self.lint_exclude_packages)]
         if self.lint_output:
             out_dir = os.path.dirname(self.lint_output)
-            os.makedirs(out_dir, exist_ok=True)
+            if out_dir:
+                if sys.version_info >= (3, 2):
+                    os.makedirs(out_dir, exist_ok=True)
+                elif not os.path.exists(outdir):
+                    os.makedirs(out_dir)
             self.lint_output = open(self.lint_output, 'w')
 
     def with_project_on_sys_path(self, func, func_args, func_kwargs):
