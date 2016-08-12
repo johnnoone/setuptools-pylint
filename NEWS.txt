@@ -1,6 +1,13 @@
 News
 ====
 
+0.5
+---
+
+*Release date: 12-Aug-2015*
+
+* fix creating dirs on outfile
+
 0.4
 ---
 
