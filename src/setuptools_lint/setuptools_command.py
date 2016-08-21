@@ -8,6 +8,7 @@ from pkg_resources import *
 
 _opts = lint.Run.LinterClass.make_options()
 
+
 def user_options():
     parsed = []
 
@@ -20,7 +21,8 @@ def user_options():
 
 def validate_rcfile(dist, attr, value):
     if not os.path.exists(value):
-        raise DistutilsSetupError("Cannot find PyLint configuration file %s" % value)
+        raise DistutilsSetupError(
+            "Cannot find PyLint configuration file %s" % value)
 
 
 class DistutilsPylintError(DistutilsError):
@@ -45,14 +47,15 @@ class PylintCommand(setuptools.Command):
         self.lint_output = None
         self.lint_rcfile = self.distribution.lint_rcfile
         for longopt, params in _opts:
-            setattr(self, 'lint_' + longopt.replace('-', '_').rstrip('='), None)
+            key = 'lint_' + longopt.replace('-', '_').rstrip('=')
+            setattr(self, key, None)
 
     def finalize_options(self):
         self.lint_packages = [package.strip()
                               for package
                               in re.split('[\s,]+', self.lint_packages)
                               if package != '']
-        self.lint_exclude_packages = [module.strip() \
+        self.lint_exclude_packages = [module.strip()
             for module in re.split('[\s,]+', self.lint_exclude_packages)]
         if self.lint_output:
             out_dir = os.path.dirname(self.lint_output)
@@ -64,7 +67,8 @@ class PylintCommand(setuptools.Command):
             self.lint_output = open(self.lint_output, 'w')
 
     def with_project_on_sys_path(self, func, func_args, func_kwargs):
-        if sys.version_info >= (3,) and getattr(self.distribution, 'use_2to3', False):
+        if sys.version_info >= (3,) \
+           and getattr(self.distribution, 'use_2to3', False):
             # If we run 2to3 we can not do this inplace:
 
             # Ensure metadata is up-to-date
@@ -104,7 +108,6 @@ class PylintCommand(setuptools.Command):
             sys.modules.update(old_modules)
             working_set.__init__()
 
-
     def run(self):
         options = []
         for longopt, params in _opts + (("rcfile", None),):
@@ -115,7 +118,8 @@ class PylintCommand(setuptools.Command):
                 options.append('--{0}={1}'.format(longopt, value))
 
         if self.distribution.install_requires:
-            self.distribution.fetch_build_eggs(self.distribution.install_requires)
+            self.distribution.fetch_build_eggs(
+                self.distribution.install_requires)
 
         if self.distribution.tests_require:
             self.distribution.fetch_build_eggs(self.distribution.tests_require)
@@ -136,11 +140,12 @@ class PylintCommand(setuptools.Command):
             stdout, sys.stdout = sys.stdout, self.lint_output
             stderr, sys.stdout = sys.stderr, self.lint_output
         try:
-
-            lint_runner = self.with_project_on_sys_path(lint.Run, [options + files], {'exit': False})
-            if lint_runner.linter.msg_status != 0:
-                raise DistutilsPylintError("lint error %s." % lint_runner.linter.msg_status)
-
+            lint_runner = self.with_project_on_sys_path(lint.Run,
+                                                        [options + files],
+                                                        {'exit': False})
+            if lint_runner.linter.msg_status:
+                raise DistutilsPylintError(
+                    "lint error %s." % lint_runner.linter.msg_status)
         finally:
             if self.lint_output:
                 sys.stdout = stdout
