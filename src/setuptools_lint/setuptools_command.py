@@ -59,7 +59,7 @@ class PylintCommand(setuptools.Command):
             if out_dir:
                 if sys.version_info >= (3, 2):
                     os.makedirs(out_dir, exist_ok=True)
-                elif not os.path.exists(outdir):
+                elif not os.path.exists(out_dir):
                     os.makedirs(out_dir)
             self.lint_output = open(self.lint_output, 'w')
 
