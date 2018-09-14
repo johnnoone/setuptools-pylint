@@ -1,6 +1,14 @@
 News
 ====
 
+0.6.0
+-----
+
+*Release date: 14-Sept-2018*
+
+* make python 2 & 3 explicit, thanks @cclauss
+* fixed pylint > 1.9 dependencies
+
 0.5.2
 -----
 
