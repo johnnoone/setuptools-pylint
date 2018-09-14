@@ -1,5 +1,3 @@
----
-
 publish to pypi:
   type: deploy
   script:
